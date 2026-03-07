@@ -1,0 +1,12 @@
+{
+  "domain": "fossibot",
+  "name": "Fossibot Power Station",
+  "codeowners": ["@ldiogoz"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/ldiogoz/fossibot-ha",
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/ldiogoz/fossibot-ha/issues",
+  "requirements": ["paho-mqtt>=1.6.1", "bleak>=0.21.0"],
+  "version": "1.0.0"
+}

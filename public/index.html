@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fossibot Control Panel</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e1e4e8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      padding: 20px;
+    }
+
+    .card {
+      background: #1c1f2b;
+      border: 1px solid #2d3148;
+      border-radius: 16px;
+      padding: 24px 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo h1 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #4fc3f7, #29b6f6, #039be5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+
+    .logo p { color: #6b7280; font-size: 14px; }
+
+    .form-group { margin-bottom: 20px; }
+
+    .form-group label {
+      display: block; font-size: 13px; font-weight: 600; color: #9ca3af;
+      margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .form-group input {
+      width: 100%; padding: 12px 16px; background: #0f1117;
+      border: 1px solid #2d3148; border-radius: 10px; color: #e1e4e8;
+      font-size: 15px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: #29b6f6; box-shadow: 0 0 0 3px rgba(41, 182, 246, 0.15);
+    }
+
+    .form-group input::placeholder { color: #4b5563; }
+
+    .btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #039be5, #0277bd);
+      color: white; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s; margin-top: 8px;
+    }
+
+    .btn:hover { opacity: 0.9; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-sm { padding: 10px 16px; font-size: 13px; width: auto; margin-top: 0; }
+    .btn-green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .btn-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .btn-logout { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+    .message {
+      margin-top: 16px; padding: 12px 16px; border-radius: 10px;
+      font-size: 14px; display: none;
+    }
+
+    .message.error {
+      display: block; background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5;
+    }
+
+    .message.success {
+      display: block; background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3); color: #86efac;
+    }
+
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3); border-top-color: white;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .dashboard { display: none; }
+    .dashboard.active { display: block; }
+    .login-form.hidden { display: none; }
+
+    .section {
+      background: #0f1117; border: 1px solid #2d3148;
+      border-radius: 10px; padding: 14px; margin-bottom: 14px;
+    }
+
+    .section h3 { font-size: 14px; color: #4fc3f7; margin-bottom: 10px; }
+
+    .field {
+      display: flex; justify-content: space-between; padding: 8px 0;
+      border-bottom: 1px solid #1c1f2b; font-size: 14px;
+    }
+
+    .field:last-child { border-bottom: none; }
+    .field .label { color: #6b7280; }
+    .field .value { color: #e1e4e8; font-weight: 500; }
+
+    .ble-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #2d3148; }
+    .btn-ble { width: 100%; background: #1e3a5f; border: 1px solid #2563eb; color: #93c5fd; font-size: 13px; padding: 10px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .btn-ble:hover { background: #1e40af; border-color: #3b82f6; }
+    .btn-ble.connected { background: #064e3b; border-color: #22c55e; color: #86efac; }
+    .btn-ble-disconnect { display: none; margin-top: 6px; background: #3b1f1f; border-color: #ef4444; color: #fca5a5; }
+    .btn-ble-disconnect:hover { background: #5c2323; }
+    .ble-badge { display: inline-flex; align-items: center; gap: 4px; background: #1e3a5f; border: 1px solid #2563eb; color: #93c5fd; padding: 2px 10px; border-radius: 12px; font-size: 12px; }
+    .ble-badge.connected { background: #064e3b; border-color: #22c55e; color: #86efac; }
+
+    .device-card {
+      background: #0f1117; border: 1px solid #2d3148; border-radius: 12px;
+      padding: 16px; margin-bottom: 12px; display: flex;
+      align-items: center; gap: 16px; transition: border-color 0.2s; cursor: pointer;
+    }
+
+    .device-card:hover { border-color: #4fc3f7; }
+    .device-card.selected { border-color: #22c55e; background: #111827; }
+
+    .device-card img {
+      width: 64px; height: 64px; object-fit: contain;
+      border-radius: 8px; background: #1c1f2b; padding: 4px;
+    }
+
+    .device-card .device-details { flex: 1; min-width: 0; overflow: hidden; }
+    .device-card .device-name { font-size: 16px; font-weight: 600; color: #e1e4e8; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .device-card .device-model { font-size: 13px; color: #6b7280; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .device-card .device-id { font-size: 11px; color: #4b5563; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .device-status { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .status-dot.online { background: #22c55e; box-shadow: 0 0 6px rgba(34, 197, 94, 0.5); }
+    .status-dot.offline { background: #6b7280; }
+
+    .no-devices, .devices-loading { text-align: center; color: #6b7280; padding: 24px; font-size: 14px; }
+
+    .mqtt-section { display: none; }
+    .mqtt-section.active { display: block; }
+
+    .mqtt-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #2d3148;
+    }
+
+    .mqtt-header h3 {
+      margin-bottom: 0; font-size: 16px; font-weight: 700;
+      background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .mqtt-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; padding: 4px 10px; border-radius: 20px;
+      background: rgba(107, 114, 128, 0.2); color: #6b7280;
+    }
+
+    .mqtt-badge.connected { background: rgba(34, 197, 94, 0.15); color: #86efac; }
+
+    .energy-flow {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0; margin-bottom: 20px; padding: 24px 12px;
+      background: radial-gradient(ellipse at 50% 50%, #1e2233 0%, #161820 60%, #0f1117 100%);
+      border: 1px solid #2d3148; border-radius: 16px;
+      overflow: hidden; position: relative;
+    }
+    .energy-flow::before {
+      content: ''; position: absolute; inset: 0; border-radius: 16px;
+      background: radial-gradient(circle at 50% 50%, rgba(79, 195, 247, 0.03) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .flow-node {
+      text-align: center; flex-shrink: 0; min-width: 80px;
+      padding: 12px 8px; border-radius: 12px;
+      background: rgba(15, 17, 23, 0.6); border: 1px solid #2d3148;
+      backdrop-filter: blur(4px); position: relative; z-index: 1;
+    }
+    .flow-icon { font-size: 26px; margin-bottom: 4px; line-height: 1.2; }
+    .flow-value {
+      font-size: 22px; font-weight: 700; color: #e1e4e8; margin-bottom: 2px;
+      letter-spacing: -0.5px;
+    }
+    .flow-label {
+      font-size: 10px; color: #6b7280; text-transform: uppercase;
+      letter-spacing: 1px; font-weight: 600;
+    }
+    .flow-sub {
+      font-size: 10px; color: #6b7280; margin-top: 2px;
+      transition: color 0.5s;
+    }
+    .flow-input.has-power .flow-sub { color: #d97706; }
+    .flow-input { border-color: #1e2233; opacity: 0.4; transition: opacity 0.5s, border-color 0.5s, box-shadow 0.5s; }
+    .flow-input .flow-value { color: #4b5563; transition: color 0.5s; }
+    .flow-input .flow-icon { filter: grayscale(1) opacity(0.5); transition: filter 0.5s; }
+    .flow-input.has-power { opacity: 1; border-color: rgba(245, 158, 11, 0.4); box-shadow: 0 0 20px rgba(245, 158, 11, 0.08); }
+    .flow-input.has-power .flow-value { color: #fbbf24; }
+    .flow-input.has-power .flow-icon { filter: none; }
+    .flow-output { border-color: #1e2233; opacity: 0.4; transition: opacity 0.5s, border-color 0.5s, box-shadow 0.5s; }
+    .flow-output .flow-value { color: #4b5563; transition: color 0.5s; }
+    .flow-output .flow-icon { filter: grayscale(1) opacity(0.5); transition: filter 0.5s; }
+    .flow-output.has-power { opacity: 1; border-color: rgba(59, 130, 246, 0.4); box-shadow: 0 0 20px rgba(59, 130, 246, 0.08); }
+    .flow-output.has-power .flow-value { color: #60a5fa; }
+    .flow-output.has-power .flow-icon { filter: none; }
+
+    .flow-path {
+      display: flex; align-items: center; justify-content: center;
+      height: 20px; flex: 1; min-width: 40px; max-width: 120px;
+      position: relative; overflow: hidden;
+    }
+    .flow-path::before {
+      content: ''; position: absolute; top: 50%; left: 0; right: 0;
+      height: 2px; background: #252838; transform: translateY(-50%);
+      border-radius: 1px;
+    }
+    .flow-path::after {
+      content: ''; position: absolute; top: 50%;
+      width: 60%; height: 4px;
+      transform: translate(-120%, -50%); border-radius: 2px;
+      opacity: 0; transition: opacity 0.5s;
+      will-change: transform;
+    }
+
+    .flow-path-in.active::before { background: linear-gradient(90deg, #f59e0b33, #f59e0b11); }
+    .flow-path-in.active::after {
+      opacity: 1;
+      background: radial-gradient(ellipse at center, #fbbf24 0%, #f59e0b88 40%, transparent 70%);
+      box-shadow: 0 0 8px #f59e0b88, 0 0 16px #f59e0b44;
+      animation: flowStreamIn 1.6s ease-in-out infinite;
+    }
+
+    .flow-path-out.active::before { background: linear-gradient(90deg, #3b82f611, #3b82f633); }
+    .flow-path-out.active::after {
+      opacity: 1;
+      background: radial-gradient(ellipse at center, #60a5fa 0%, #3b82f688 40%, transparent 70%);
+      box-shadow: 0 0 8px #3b82f688, 0 0 16px #3b82f644;
+      animation: flowStreamOut 1.6s ease-in-out infinite;
+    }
+
+    @keyframes flowStreamIn {
+      0% { transform: translate(-120%, -50%); opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { transform: translate(220%, -50%); opacity: 0; }
+    }
+    @keyframes flowStreamOut {
+      0% { transform: translate(-120%, -50%); opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { transform: translate(220%, -50%); opacity: 0; }
+    }
+
+    .flow-battery { flex-shrink: 0; z-index: 1; }
+
+    .battery-gauge {
+      position: relative; width: 140px; height: 140px; margin: 0 auto;
+    }
+    .battery-gauge svg { transform: rotate(-90deg); transition: filter 0.5s; }
+    .battery-gauge .gauge-bg {
+      fill: none; stroke: #1e2233; stroke-width: 10;
+    }
+    .battery-gauge .gauge-fill {
+      fill: none; stroke: #22c55e; stroke-width: 10;
+      stroke-linecap: round; transition: stroke-dashoffset 0.8s ease, stroke 0.5s, filter 0.5s;
+    }
+    .battery-gauge.charging .gauge-fill { filter: drop-shadow(0 0 5px currentColor); }
+    .battery-gauge .gauge-text {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%);
+      font-size: 30px; font-weight: 800; color: #22c55e; text-align: center;
+      line-height: 1;
+    }
+    .battery-gauge .gauge-text .gauge-pct { font-size: 13px; font-weight: 500; color: #6b7280; }
+    .battery-gauge .gauge-time {
+      font-size: 11px; font-weight: 600; color: #a78bfa; margin-top: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    .mqtt-log {
+      background: #0f1117; border: 1px solid #2d3148; border-radius: 8px;
+      padding: 12px; font-size: 12px; font-family: monospace; color: #9ca3af;
+      max-height: 200px; overflow-y: auto; margin-top: 12px;
+    }
+
+    .mqtt-log .log-entry { padding: 2px 0; border-bottom: 1px solid #1a1d2a; }
+    .mqtt-log .log-entry:last-child { border-bottom: none; }
+    .log-time { color: #4b5563; margin-right: 8px; }
+    .log-event { color: #4fc3f7; margin-right: 4px; }
+
+    .btn-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .btn-row .btn { flex: 1; }
+
+    .controls-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+      margin-bottom: 16px;
+    }
+    .control-card {
+      background: rgba(15, 17, 23, 0.6); backdrop-filter: blur(4px);
+      border: 2px solid #252838; border-radius: 14px;
+      padding: 18px 12px; display: flex; flex-direction: column;
+      align-items: center; gap: 6px;
+      transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+      position: relative; text-align: center; cursor: pointer;
+      user-select: none;
+    }
+    .control-card:hover { border-color: #3d4168; background: rgba(22, 25, 35, 0.8); }
+    .control-card.power-on {
+      border-color: #22c55e; background: rgba(34, 197, 94, 0.08);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.1), inset 0 0 30px rgba(34, 197, 94, 0.03);
+    }
+    .control-card.power-on:hover { border-color: #16a34a; background: rgba(34, 197, 94, 0.12); }
+    .control-card.pending { opacity: 0.6; pointer-events: none; }
+    .control-card.led-card {
+      flex-direction: column; align-items: center;
+      grid-column: 1 / -1; cursor: default; padding: 16px;
+    }
+    .control-card.led-card:hover { border-color: #252838; background: rgba(15, 17, 23, 0.6); }
+    .control-card.led-card.power-on {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.05);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.08), inset 0 0 30px rgba(245, 158, 11, 0.02);
+    }
+    .control-card.led-card.power-on:hover {
+      border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.07);
+    }
+    .control-card.led-card.power-on .control-label { color: #fbbf24; }
+    .led-card-header {
+      display: flex; align-items: center; gap: 8px; justify-content: center;
+      margin-bottom: 6px;
+    }
+    .led-buttons {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%;
+    }
+    .led-btn {
+      padding: 10px 6px; background: rgba(15, 17, 23, 0.8);
+      border: 2px solid #252838; border-radius: 10px;
+      color: #6b7280; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.25s; text-align: center;
+      letter-spacing: 0.3px;
+    }
+    .led-btn:hover { border-color: rgba(245, 158, 11, 0.3); color: #e1e4e8; background: rgba(22, 25, 35, 0.9); }
+    .led-btn.active {
+      background: rgba(245, 158, 11, 0.12); border-color: #f59e0b;
+      color: #fbbf24; box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+    }
+    .control-icon { font-size: 28px; line-height: 1; margin-bottom: 2px; }
+    .control-label { font-size: 13px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #6b7280; transition: color 0.3s; }
+    .control-card.power-on .control-label { color: #86efac; }
+    .control-status {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      color: #374151; text-transform: uppercase; margin-top: 2px;
+      transition: color 0.3s;
+    }
+    .control-card.power-on .control-status { color: #22c55e; }
+
+    .settings-panel {
+      margin-bottom: 16px;
+    }
+    .settings-toggle {
+      cursor: pointer; font-size: 14px; font-weight: 600; color: #9ca3af;
+      padding: 10px 14px; background: linear-gradient(135deg, #1c1f2b 0%, #1a1d28 100%);
+      border: 1px solid #2d3148; border-radius: 10px; display: block;
+      transition: color 0.2s, border-color 0.2s; list-style: none;
+    }
+    .settings-toggle:hover { color: #e1e4e8; border-color: #3d4168; }
+    .settings-toggle::-webkit-details-marker { display: none; }
+    .settings-panel[open] .settings-toggle {
+      border-radius: 10px 10px 0 0; border-bottom: none; color: #4fc3f7;
+    }
+    .settings-grid {
+      background: #0f1117; border: 1px solid #2d3148; border-top: none;
+      border-radius: 0 0 10px 10px; padding: 12px;
+    }
+    .setting-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 4px; border-bottom: 1px solid #1c1f2b;
+    }
+    .setting-item:last-child { border-bottom: none; }
+    .setting-label { font-size: 13px; color: #9ca3af; font-weight: 500; }
+    .setting-select {
+      background: #1c1f2b; color: #e1e4e8; border: 1px solid #2d3148;
+      border-radius: 6px; padding: 5px 10px; font-size: 13px;
+      outline: none; cursor: pointer; min-width: 100px;
+    }
+    .setting-select:focus { border-color: #29b6f6; }
+
+    .setting-slider-row {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 10px 4px; border-bottom: 1px solid #1c1f2b;
+    }
+    .setting-slider-row:last-child { border-bottom: none; }
+    .setting-slider-header {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .setting-slider-value {
+      font-size: 14px; font-weight: 700; color: #e1e4e8;
+      min-width: 40px; text-align: right;
+    }
+    .setting-slider {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 6px; border-radius: 3px;
+      background: #252838; outline: none; cursor: pointer;
+    }
+    .setting-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #22c55e; cursor: pointer;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.3);
+      border: 2px solid #16a34a;
+    }
+    .setting-slider::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #22c55e; cursor: pointer;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.3);
+      border: 2px solid #16a34a;
+    }
+    .setting-slider.amber::-webkit-slider-thumb { background: #f59e0b; border-color: #d97706; box-shadow: 0 0 6px rgba(245, 158, 11, 0.3); }
+    .setting-slider.amber::-moz-range-thumb { background: #f59e0b; border-color: #d97706; box-shadow: 0 0 6px rgba(245, 158, 11, 0.3); }
+
+    .dashboard-layout { display: flex; flex-direction: column; gap: 12px; }
+    .sidebar .section { margin-bottom: 12px; }
+    .sidebar-title {
+      font-size: 18px; font-weight: 700; margin-bottom: 14px;
+      background: linear-gradient(135deg, #4fc3f7, #29b6f6, #039be5);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .main-panel { min-width: 0; overflow: hidden; }
+    .no-device-placeholder {
+      text-align: center; color: #4b5563; padding: 32px 16px;
+      background: #0f1117; border: 1px solid #2d3148; border-radius: 10px;
+    }
+
+    .raw-response { margin-top: 16px; }
+    .raw-response summary { cursor: pointer; color: #6b7280; font-size: 13px; margin-bottom: 8px; }
+    .raw-response pre {
+      background: #0f1117; border: 1px solid #2d3148; border-radius: 8px;
+      padding: 16px; font-size: 12px; overflow-x: auto; color: #9ca3af;
+      max-height: 300px; overflow-y: auto;
+    }
+
+    .setting-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0; border-bottom: 1px solid #1e2233;
+    }
+    .setting-toggle-row:last-child { border-bottom: none; }
+    .setting-toggle-label { font-size: 13px; color: #9ca3af; }
+    .setting-toggle {
+      position: relative; width: 40px; height: 22px;
+      background: #252838; border-radius: 11px; cursor: pointer;
+      transition: background 0.3s; border: 1px solid #2d3148;
+    }
+    .setting-toggle.on { background: #22c55e; border-color: #16a34a; }
+    .setting-toggle::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #e1e4e8; transition: transform 0.3s;
+    }
+    .setting-toggle.on::after { transform: translateX(18px); }
+    .setting-toggle.pending { opacity: 0.5; pointer-events: none; }
+    .low-batt-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 0; border-bottom: 1px solid #1e2233;
+    }
+    .low-batt-threshold {
+      width: 50px; background: #151822; border: 1px solid #2d3148;
+      border-radius: 6px; color: #e1e4e8; font-size: 13px;
+      padding: 4px 6px; text-align: center; outline: none;
+    }
+    .low-batt-threshold:focus { border-color: #3b82f6; }
+    .btn-shutdown {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; padding: 10px; margin-top: 8px;
+      background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px; color: #ef4444; cursor: pointer;
+      font-size: 13px; font-weight: 600; transition: all 0.3s;
+    }
+    .btn-shutdown:hover { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.5); }
+    .btn-shutdown.confirming { background: rgba(239, 68, 68, 0.3); color: #fca5a5; }
+
+    @media (max-width: 480px) {
+      .energy-flow { padding: 16px 6px; gap: 0; }
+      .flow-node { min-width: 62px; padding: 8px 4px; }
+      .flow-value { font-size: 16px; }
+      .flow-icon { font-size: 20px; }
+      .flow-path { min-width: 24px; padding: 0 2px; }
+      .battery-gauge { width: 110px; height: 110px; }
+      .battery-gauge svg { width: 110px; height: 110px; }
+      .battery-gauge .gauge-text { font-size: 22px; }
+      .battery-gauge .gauge-bg, .battery-gauge .gauge-fill { stroke-width: 8; }
+      .controls-grid { grid-template-columns: 1fr 1fr; }
+      .control-card:nth-child(3) { grid-column: 1 / -1; }
+    }
+
+    @media (min-width: 768px) {
+      body { align-items: flex-start; padding-top: 40px; }
+      .container { max-width: 860px; }
+      .dashboard-layout { flex-direction: row; gap: 16px; }
+      .sidebar { width: 260px; flex-shrink: 0; }
+      .main-panel { flex: 1; }
+      .device-card {
+        flex-direction: column; align-items: center; text-align: center; gap: 10px;
+      }
+      .device-card img { width: 80px; height: 80px; }
+      .device-card .device-details { width: 100%; }
+      .device-card .device-name, .device-card .device-model, .device-card .device-id { white-space: normal; word-break: break-word; }
+      .device-status { justify-content: center; }
+    }
+
+    @media (min-width: 1200px) {
+      .container { max-width: 1100px; }
+      .sidebar { width: 300px; }
+      .card { padding: 28px 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card" id="loginCard">
+      <div class="logo">
+        <h1>Fossibot</h1>
+        <p>Control Panel</p>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label>Username / Email</label>
+          <input type="text" id="username" placeholder="Enter your username or email" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn" id="loginBtn">Sign In</button>
+        <button type="button" class="btn btn-ble" style="margin-top:8px;width:100%" onclick="enterOfflineMode()">🔵 Offline Mode (BLE Only)</button>
+        <div id="loginMessage" class="message"></div>
+      </form>
+    </div>
+
+    <div id="dashboard" class="dashboard">
+      <div class="dashboard-layout">
+        <div class="card sidebar">
+          <h2 class="sidebar-title">Fossibot</h2>
+          <div class="section" id="userInfo"></div>
+          <div class="section">
+            <h3>My Devices</h3>
+            <div id="devicesList" class="devices-loading">Loading devices...</div>
+          </div>
+          <button class="btn btn-logout" id="logoutBtn">Sign Out</button>
+          <div class="section ble-section">
+            <h3>Bluetooth</h3>
+            <button class="btn btn-ble" id="bleConnectBtn" onclick="bleConnect()">🔵 Connect via BLE</button>
+            <button class="btn btn-ble btn-ble-disconnect" id="bleDisconnectBtn" onclick="bleDisconnect()" style="display:none">Disconnect BLE</button>
+          </div>
+        </div>
+        <div class="card main-panel">
+          <div id="noDevicePlaceholder" class="no-device-placeholder">
+            <p style="font-size:40px;margin-bottom:12px;">📡</p>
+            <p>Select a device to start monitoring</p>
+          </div>
+          <div id="mqttSection" class="mqtt-section">
+          <div class="mqtt-header">
+            <h3>Live Monitor</h3>
+            <span id="mqttBadge" class="mqtt-badge">
+              <span class="status-dot offline"></span> Disconnected
+            </span>
+          </div>
+
+          <div class="energy-flow">
+            <div class="flow-node flow-input" id="flowInput">
+              <div class="flow-icon">⚡</div>
+              <div class="flow-value" id="statInput">--W</div>
+              <div class="flow-label">Input</div>
+              <div class="flow-sub" id="statPvToday">--</div>
+            </div>
+            <div class="flow-path flow-path-in" id="flowPathIn"></div>
+            <div class="flow-node flow-battery">
+              <div class="battery-gauge">
+                <svg width="140" height="140" viewBox="0 0 140 140">
+                  <circle class="gauge-bg" cx="70" cy="70" r="60"/>
+                  <circle class="gauge-fill" id="batteryGaugeFill" cx="70" cy="70" r="60" stroke-dasharray="376.99" stroke-dashoffset="376.99"/>
+                </svg>
+                <div class="gauge-text">
+                  <span id="statBattery">--</span><span class="gauge-pct">%</span>
+                  <div class="gauge-time" id="statTimeLeft">--</div>
+                </div>
+              </div>
+            </div>
+            <div class="flow-path flow-path-out" id="flowPathOut"></div>
+            <div class="flow-node flow-output" id="flowOutput">
+              <div class="flow-icon">🏠</div>
+              <div class="flow-value" id="statOutput">--W</div>
+              <div class="flow-label">Output</div>
+            </div>
+          </div>
+
+          <div class="controls-grid">
+            <div class="control-card" id="cardAc" onclick="toggleControl('ac', 26)">
+              <span class="control-icon">⚡</span>
+              <span class="control-label">AC</span>
+              <span class="control-status" id="stateAc">OFF</span>
+            </div>
+            <div class="control-card" id="cardDc" onclick="toggleControl('dc', 25)">
+              <span class="control-icon">🔌</span>
+              <span class="control-label">DC</span>
+              <span class="control-status" id="stateDc">OFF</span>
+            </div>
+            <div class="control-card" id="cardUsb" onclick="toggleControl('usb', 24)">
+              <span class="control-icon">🔋</span>
+              <span class="control-label">USB</span>
+              <span class="control-status" id="stateUsb">OFF</span>
+            </div>
+            <div class="control-card led-card" id="cardLed">
+              <div class="led-card-header">
+                <span class="control-icon">💡</span>
+                <span class="control-label">LED</span>
+              </div>
+              <div class="led-buttons">
+                <button class="led-btn active" data-led="0" onclick="setLedMode(0)">Off</button>
+                <button class="led-btn" data-led="1" onclick="setLedMode(1)">On</button>
+                <button class="led-btn" data-led="2" onclick="setLedMode(2)">SOS</button>
+                <button class="led-btn" data-led="3" onclick="setLedMode(3)">Flash</button>
+              </div>
+            </div>
+          </div>
+
+          <details class="settings-panel" open>
+            <summary class="settings-toggle">🔋 Battery Settings</summary>
+            <div class="settings-grid">
+              <div class="setting-slider-row">
+                <div class="setting-slider-header">
+                  <div class="setting-label">Discharge Lower Limit</div>
+                  <div class="setting-slider-value" id="dischargeLimitVal">--%</div>
+                </div>
+                <input type="range" class="setting-slider amber" id="dischargeLimitSlider" min="0" max="50" step="1" value="25" oninput="updateSliderPreview('dischargeLimit', this.value)" onchange="setSliderSetting(66, +this.value * 10, 'dischargeLimit')">
+              </div>
+              <div class="setting-slider-row">
+                <div class="setting-slider-header">
+                  <div class="setting-label">AC Charging Upper Limit</div>
+                  <div class="setting-slider-value" id="chargeLimitVal">--%</div>
+                </div>
+                <input type="range" class="setting-slider" id="chargeLimitSlider" min="60" max="100" step="1" value="99" oninput="updateSliderPreview('chargeLimit', this.value)" onchange="setSliderSetting(67, +this.value * 10, 'chargeLimit')">
+              </div>
+            </div>
+          </details>
+
+          <details class="settings-panel">
+            <summary class="settings-toggle">⚙️ Device Settings</summary>
+            <div class="settings-grid">
+              <div class="setting-item">
+                <div class="setting-label">AC No-Load Standby</div>
+                <div class="setting-control">
+                  <select class="setting-select" id="settingAcStandby" onchange="setSetting(60, +this.value)">
+                    <option value="0">Never</option>
+                    <option value="30">30 min</option>
+                    <option value="60">1 hour</option>
+                    <option value="120">2 hours</option>
+                    <option value="240">4 hours</option>
+                    <option value="480">8 hours</option>
+                    <option value="720">12 hours</option>
+                    <option value="960">16 hours</option>
+                    <option value="1440">24 hours</option>
+                  </select>
+                </div>
+              </div>
+              <div class="setting-item">
+                <div class="setting-label">DC No-Load Standby</div>
+                <div class="setting-control">
+                  <select class="setting-select" id="settingDcStandby" onchange="setSetting(61, +this.value)">
+                    <option value="0">Never</option>
+                    <option value="30">30 min</option>
+                    <option value="60">1 hour</option>
+                    <option value="120">2 hours</option>
+                    <option value="240">4 hours</option>
+                    <option value="480">8 hours</option>
+                    <option value="720">12 hours</option>
+                    <option value="960">16 hours</option>
+                    <option value="1440">24 hours</option>
+                  </select>
+                </div>
+              </div>
+              <div class="setting-item">
+                <div class="setting-label">USB No-Load Standby</div>
+                <div class="setting-control">
+                  <select class="setting-select" id="settingUsbStandby" onchange="setSetting(59, +this.value)">
+                    <option value="0">Never</option>
+                    <option value="1">1 min</option>
+                    <option value="2">2 min</option>
+                    <option value="3">3 min</option>
+                    <option value="5">5 min</option>
+                    <option value="10">10 min</option>
+                    <option value="15">15 min</option>
+                    <option value="30">30 min</option>
+                    <option value="60">1 hour</option>
+                    <option value="120">2 hours</option>
+                    <option value="240">4 hours</option>
+                  </select>
+                </div>
+              </div>
+              <div class="setting-item">
+                <div class="setting-label">Whole Machine Unused</div>
+                <div class="setting-control">
+                  <select class="setting-select" id="settingAutoOff" onchange="setSetting(68, +this.value)">
+                    <option value="0">Never</option>
+                    <option value="1">1 min</option>
+                    <option value="3">3 min</option>
+                    <option value="5">5 min</option>
+                    <option value="10">10 min</option>
+                    <option value="15">15 min</option>
+                    <option value="30">30 min</option>
+                    <option value="60">1 hour</option>
+                    <option value="120">2 hours</option>
+                  </select>
+                </div>
+              </div>
+              <div class="setting-item">
+                <div class="setting-label">Screen Rest</div>
+                <div class="setting-control">
+                  <select class="setting-select" id="settingScreenRest" onchange="setSetting(62, +this.value)">
+                    <option value="0">Never</option>
+                    <option value="30">30 sec</option>
+                    <option value="60">1 min</option>
+                    <option value="180">3 min</option>
+                    <option value="300">5 min</option>
+                    <option value="600">10 min</option>
+                    <option value="1800">30 min</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="settings-panel">
+            <summary class="settings-toggle">🔧 Advanced Settings</summary>
+            <div class="settings-grid">
+              <div class="setting-toggle-row">
+                <span class="setting-toggle-label">🔊 Key Sound</span>
+                <div class="setting-toggle" id="toggleKeySound" onclick="toggleSetting('keySound', 56)"></div>
+              </div>
+              <div class="setting-toggle-row">
+                <span class="setting-toggle-label">🤫 Silent Charging</span>
+                <div class="setting-toggle" id="toggleSilentCharging" onclick="toggleSetting('silentCharging', 57)"></div>
+              </div>
+              <div class="setting-toggle-row">
+                <span class="setting-toggle-label">🔋 Low Battery Notification</span>
+                <div class="setting-toggle" id="toggleLowBatt" onclick="togglePackedToggle('lowBatt', 84, 'high')"></div>
+              </div>
+              <div class="low-batt-row">
+                <span class="setting-toggle-label">Low Battery Threshold</span>
+                <input type="number" class="low-batt-threshold" id="lowBattThreshold" min="5" max="50" value="10">
+                <span style="color:#6b7280;font-size:12px;">%</span>
+                <button class="btn btn-sm btn-orange" style="padding:4px 10px;font-size:11px;" onclick="setLowBattThreshold()">Set</button>
+              </div>
+              <button class="btn-shutdown" id="btnShutdown" onclick="remoteShutdown()">⏻ Remote Shutdown</button>
+            </div>
+          </details>
+
+          <div class="btn-row">
+            <button class="btn btn-sm btn-orange" id="pollBtn">Refresh Data</button>
+            <button class="btn btn-sm btn-logout" id="mqttDisconnectBtn">Disconnect</button>
+          </div>
+
+          <details>
+            <summary style="cursor:pointer;color:#6b7280;font-size:13px;margin-bottom:8px;">All Registers</summary>
+            <div id="regTable" style="font-family:monospace;font-size:12px;color:#9ca3af;max-height:300px;overflow-y:auto;background:#0f1117;border:1px solid #2d3148;border-radius:8px;padding:12px;"></div>
+          </details>
+
+          <details>
+            <summary style="cursor:pointer;color:#6b7280;font-size:13px;margin-bottom:8px;">Event Log</summary>
+            <div class="mqtt-log" id="mqttLog"></div>
+          </details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById("loginForm");
+    const dashboard = document.getElementById("dashboard");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginMessage = document.getElementById("loginMessage");
+    const userInfoEl = document.getElementById("userInfo");
+    const loginCard = document.getElementById("loginCard");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const mqttSection = document.getElementById("mqttSection");
+    const mqttBadge = document.getElementById("mqttBadge");
+    const mqttLog = document.getElementById("mqttLog");
+    const pollBtn = document.getElementById("pollBtn");
+    const mqttDisconnectBtn = document.getElementById("mqttDisconnectBtn");
+
+    let devices = [];
+    let selectedDevice = null;
+    let eventSource = null;
+    let controlPendingUntil = 0;
+    let settingsPendingUntil = 0;
+    let connectedDeviceIds = new Set();
+
+    (async () => {
+      try {
+        const res = await fetch("/api/status");
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          showDashboard(data.user);
+        }
+      } catch (e) {}
+    })();
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<span class="spinner"></span>Signing in...';
+      loginMessage.className = "message";
+      loginMessage.style.display = "none";
+
+      try {
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          loginMessage.className = "message success";
+          loginMessage.textContent = "Login successful!";
+          loginMessage.style.display = "block";
+          setTimeout(() => showDashboard(data.data), 800);
+        } else {
+          loginMessage.className = "message error";
+          loginMessage.textContent = data.error || "Login failed";
+          loginMessage.style.display = "block";
+        }
+      } catch (err) {
+        loginMessage.className = "message error";
+        loginMessage.textContent = "Connection error: " + err.message;
+        loginMessage.style.display = "block";
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Sign In";
+      }
+    });
+
+    function showDashboard(data) {
+      loginCard.style.display = "none";
+      dashboard.classList.add("active");
+
+      let fields = "";
+      if (data.userInfo) {
+        const u = data.userInfo;
+        [["Username", u.username], ["Nickname", u.nickname], ["Email", u.email],
+         ["Phone", u.mobile], ["Status", u.status === 0 ? "Active" : "Inactive"]
+        ].forEach(([label, value]) => {
+          if (value) fields += `<div class="field"><span class="label">${label}</span><span class="value">${value}</span></div>`;
+        });
+      }
+      userInfoEl.innerHTML = `<h3>Account</h3>${fields || '<div class="field"><span class="label">Token</span><span class="value">' + (data.token || "N/A").substring(0, 24) + "...</span></div>"}`;
+
+      loadDevices();
+    }
+
+    let offlineMode = false;
+
+    function enterOfflineMode() {
+      offlineMode = true;
+      loginCard.style.display = "none";
+      dashboard.classList.add("active");
+      userInfoEl.innerHTML = '<h3>Account</h3><div class="field"><span class="label">Mode</span><span class="value">Offline (BLE)</span></div>';
+      document.getElementById("devicesList").innerHTML = '<div class="no-devices">BLE mode — no cloud devices</div>';
+      document.getElementById("noDevicePlaceholder").style.display = "none";
+      mqttSection.classList.add("active");
+      resetStats();
+      mqttBadge.innerHTML = '<span class="status-dot offline"></span> Disconnected';
+      document.getElementById("bleConnectBtn").style.display = "";
+      addLog("system", "Offline mode — connect via BLE");
+    }
+
+    async function loadDevices() {
+      const devicesList = document.getElementById("devicesList");
+      devicesList.innerHTML = '<div class="devices-loading"><span class="spinner"></span> Loading...</div>';
+
+      try {
+        const res = await fetch("/api/devices");
+        const data = await res.json();
+
+        if (data.success && data.devices) {
+          devices = data.devices;
+          if (devices.length === 0) {
+            devicesList.innerHTML = '<div class="no-devices">No devices found</div>';
+            return;
+          }
+
+          renderDevices();
+        } else if (data.needsLogin) {
+          document.getElementById("dashboard").style.display = "none";
+          document.getElementById("loginCard").style.display = "";
+          devicesList.innerHTML = '<div class="no-devices">Session expired. Please log in again.</div>';
+        } else {
+          devicesList.innerHTML = `<div class="no-devices">${data.error || "Failed to load devices"}</div>`;
+        }
+      } catch (err) {
+        devicesList.innerHTML = `<div class="no-devices">Error: ${err.message}</div>`;
+      }
+    }
+
+    function renderDevices() {
+      const devicesList = document.getElementById("devicesList");
+      devicesList.innerHTML = devices.map((device, i) => {
+        const name = device.device_name || device.productInfo?.product_name || "Unknown";
+        const model = device.productInfo?.name || "";
+        const img = device.productInfo?.product_imgs?.[0] || "";
+        const online = device.mqtt_state === 1;
+        const sel = selectedDevice?.device_id === device.device_id;
+
+        return `
+          <div class="device-card ${sel ? "selected" : ""}" onclick="selectDevice(${i})">
+            ${img ? `<img src="${img}" alt="${name}">` : ""}
+            <div class="device-details">
+              <div class="device-name">${name}</div>
+              <div class="device-model">${model}</div>
+              <div class="device-id">${device.device_id || ""}</div>
+            </div>
+            <div class="device-status">
+              <span class="status-dot ${online ? "online" : "offline"}"></span>
+              ${online ? "Online" : "Offline"}
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    async function selectDevice(index) {
+      const device = devices[index];
+      if (selectedDevice?.device_id === device.device_id) return;
+
+      selectedDevice = device;
+      renderDevices();
+      document.getElementById("noDevicePlaceholder").style.display = "none";
+      mqttSection.classList.add("active");
+      resetStats();
+
+      if (!connectedDeviceIds.has(device.device_id)) {
+        addLog("system", `Connecting to ${device.device_name || device.device_id}...`);
+        try {
+          const res = await fetch("/api/mqtt/connect", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              deviceId: device.device_id,
+              modbusAddr: device.productInfo?.modbus_address || 17,
+              modbusCount: device.productInfo?.modbus_count || 80,
+            }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            connectedDeviceIds.add(device.device_id);
+          } else {
+            addLog("error", data.error);
+          }
+        } catch (err) {
+          addLog("error", err.message);
+        }
+      } else {
+        addLog("system", `Switched to ${device.device_name || device.device_id}`);
+        try {
+          const res = await fetch(`/api/mqtt/data?deviceId=${encodeURIComponent(device.device_id)}`);
+          const data = await res.json();
+          if (data.success && data.data) {
+            Object.keys(data.data).length > 0 && updateStats({ ...data.data, _fc: 4 });
+          }
+        } catch (e) {}
+      }
+
+      startSSE();
+    }
+
+    function startSSE() {
+      if (eventSource) eventSource.close();
+      eventSource = new EventSource("/api/mqtt/events");
+
+      eventSource.addEventListener("mqtt-status", (e) => {
+        const data = JSON.parse(e.data);
+        if (data.deviceId && data.deviceId !== selectedDevice?.device_id) return;
+        if (data.connected) {
+          mqttBadge.classList.add("connected");
+          mqttBadge.innerHTML = '<span class="status-dot online"></span> Connected';
+          addLog("mqtt", "Connected to broker");
+        } else {
+          mqttBadge.classList.remove("connected");
+          mqttBadge.innerHTML = '<span class="status-dot offline"></span> Disconnected';
+          addLog("mqtt", "Disconnected");
+        }
+      });
+
+      eventSource.addEventListener("device-data", (e) => {
+        const data = JSON.parse(e.data);
+        if (data.deviceId && data.deviceId !== selectedDevice?.device_id) return;
+        updateStats(data);
+        addLog("data", JSON.stringify(data));
+      });
+
+      eventSource.addEventListener("device-state", (e) => {
+        const data = JSON.parse(e.data);
+        if (data.deviceId && data.deviceId !== selectedDevice?.device_id) return;
+        addLog("state", `Device ${data.online ? "online" : "offline"}`);
+      });
+
+      eventSource.addEventListener("device-webhook", (e) => {
+        const data = JSON.parse(e.data);
+        if (data.deviceId && data.deviceId !== selectedDevice?.device_id) return;
+        addLog("webhook", data.status);
+      });
+
+      eventSource.addEventListener("device-fault", (e) => {
+        const data = JSON.parse(e.data);
+        if (data.deviceId && data.deviceId !== selectedDevice?.device_id) return;
+        addLog("fault", JSON.stringify(data));
+      });
+
+      eventSource.addEventListener("device-raw", (e) => {
+        const data = JSON.parse(e.data);
+        if (data.deviceId && data.deviceId !== selectedDevice?.device_id) return;
+        addLog("raw", data.hex);
+      });
+
+      eventSource.addEventListener("mqtt-error", (e) => {
+        const data = JSON.parse(e.data);
+        if (data.deviceId && data.deviceId !== selectedDevice?.device_id) return;
+        addLog("error", data.error);
+      });
+    }
+
+    function updateStats(data) {
+      if (data._fc === 4) {
+        if (data.mainBattery !== undefined) {
+          const pct = data.mainBattery;
+          document.getElementById("statBattery").textContent = pct.toFixed(1);
+          const circumference = 2 * Math.PI * 60;
+          const offset = circumference * (1 - pct / 100);
+          const fill = document.getElementById("batteryGaugeFill");
+          fill.style.strokeDashoffset = offset;
+          fill.style.stroke = pct > 50 ? "#22c55e" : pct > 20 ? "#f59e0b" : "#ef4444";
+          const gaugeColor = pct > 50 ? "#22c55e" : pct > 20 ? "#f59e0b" : "#ef4444";
+          document.querySelector(".battery-gauge .gauge-text").style.color = gaugeColor;
+        }
+
+        const pvPower = Math.max(data.pv1ChargePower || 0, data.pv2ChargePower || 0,
+          data.pv3ChargePower || 0, data.pv4ChargePower || 0);
+        const totalInput = (data.dcChargePower || 0) + (data.acChargePower || 0) + pvPower + (data.acGridPower || 0);
+        const inputW = totalInput < 5 ? 0 : totalInput;
+        document.getElementById("statInput").textContent = inputW + "W";
+        document.getElementById("flowPathIn").classList.toggle("active", inputW > 0);
+        document.getElementById("flowInput").classList.toggle("has-power", inputW > 0);
+        document.querySelector(".battery-gauge").classList.toggle("charging", inputW > 0);
+
+        if (data.totalOutputPower !== undefined) {
+          document.getElementById("statOutput").textContent = data.totalOutputPower + "W";
+          document.getElementById("flowPathOut").classList.toggle("active", data.totalOutputPower > 0);
+          document.getElementById("flowOutput").classList.toggle("has-power", data.totalOutputPower > 0);
+        }
+
+        if (data.remainChargeMinutes !== undefined && data.remainChargeMinutes > 0) {
+          const h = Math.floor(data.remainChargeMinutes / 60);
+          const m = data.remainChargeMinutes % 60;
+          document.getElementById("statTimeLeft").textContent = (h > 0 ? h + "h " : "") + m + "m ⚡";
+        } else if (data.remainDischargeHours !== undefined) {
+          const h = Math.floor(data.remainDischargeHours);
+          const m = Math.round((data.remainDischargeHours - h) * 60);
+          document.getElementById("statTimeLeft").textContent = h + "h " + (m < 10 ? "0" : "") + m + "m";
+        }
+
+        if (data.pvEnergyTodayKwh !== undefined) {
+          document.getElementById("statPvToday").textContent = data.pvEnergyTodayKwh + " kWh today";
+        }
+      }
+
+      if (data._fc === 3 && Date.now() >= controlPendingUntil) {
+        if (data.acOutputCmd !== undefined) {
+          const acOn = data.acOutputCmd > 0;
+          document.getElementById("cardAc").classList.toggle("power-on", acOn);
+          const sAc = document.getElementById("stateAc"); sAc.textContent = acOn ? "ON" : "OFF";
+        }
+        if (data.dcOutputCmd !== undefined) {
+          const dcOn = data.dcOutputCmd > 0;
+          document.getElementById("cardDc").classList.toggle("power-on", dcOn);
+          const sDc = document.getElementById("stateDc"); sDc.textContent = dcOn ? "ON" : "OFF";
+        }
+        if (data.usbOutputCmd !== undefined) {
+          const usbOn = data.usbOutputCmd > 0;
+          document.getElementById("cardUsb").classList.toggle("power-on", usbOn);
+          const sUsb = document.getElementById("stateUsb"); sUsb.textContent = usbOn ? "ON" : "OFF";
+        }
+        if (data.ledCmd !== undefined) {
+          document.querySelectorAll(".led-btn").forEach(b => b.classList.toggle("active", +b.dataset.led === data.ledCmd));
+          document.getElementById("cardLed").classList.toggle("power-on", data.ledCmd > 0);
+        }
+        if (Date.now() >= settingsPendingUntil) {
+          if (data.usbStandbyTime !== undefined) document.getElementById("settingUsbStandby").value = data.usbStandbyTime;
+          if (data.acStandbyTime !== undefined) document.getElementById("settingAcStandby").value = data.acStandbyTime;
+          if (data.dcStandbyTime !== undefined) document.getElementById("settingDcStandby").value = data.dcStandbyTime;
+          if (data.screenRestTime !== undefined) document.getElementById("settingScreenRest").value = data.screenRestTime;
+          if (data.machineUnusedTime !== undefined) document.getElementById("settingAutoOff").value = data.machineUnusedTime;
+          if (data.dischargeLimitx10 !== undefined) {
+            const pct = Math.round(data.dischargeLimitx10 / 10);
+            document.getElementById("dischargeLimitSlider").value = pct;
+            document.getElementById("dischargeLimitVal").textContent = pct + "%";
+          }
+          if (data.chargeLimitx10 !== undefined) {
+            const pct = Math.round(data.chargeLimitx10 / 10);
+            document.getElementById("chargeLimitSlider").value = pct;
+            document.getElementById("chargeLimitVal").textContent = pct + "%";
+          }
+          if (data.keySound !== undefined)
+            document.getElementById("toggleKeySound").classList.toggle("on", data.keySound > 0);
+          if (data.silentCharging !== undefined)
+            document.getElementById("toggleSilentCharging").classList.toggle("on", data.silentCharging > 0);
+          if (data.lowBattNotifyEnabled !== undefined)
+            document.getElementById("toggleLowBatt").classList.toggle("on", data.lowBattNotifyEnabled > 0);
+          if (data.lowBattNotifyThreshold !== undefined)
+            document.getElementById("lowBattThreshold").value = data.lowBattNotifyThreshold;
+          if (data._registers && data._registers[84] !== undefined) packedReg84 = data._registers[84];
+        }
+      }
+
+      if (data._registers) {
+        const regTable = document.getElementById("regTable");
+        const start = data.raw?.startReg || 0;
+        const fcLabel = (data._fc === 3 ? "Holding (FC3)" : data._fc === 4 ? "Input (FC4)" : "FC" + data._fc) + " start=" + start;
+        let html = '<div style="color:#4fc3f7;margin-bottom:8px;font-weight:bold">' + fcLabel + '</div>';
+        html += '<table style="width:100%;border-collapse:collapse;">';
+        html += '<tr style="color:#4fc3f7"><th style="text-align:left;padding:2px 8px">Reg</th><th style="text-align:left;padding:2px 8px">Name</th><th style="text-align:right;padding:2px 8px">Value</th></tr>';
+        Object.entries(data._registers).sort((a,b) => +a[0] - +b[0]).forEach(([reg, val]) => {
+          const name = data[Object.keys(data).find(k => k !== '_registers' && k !== 'raw' && k !== '_fc' && data[k] === val)] || "";
+          html += `<tr style="border-top:1px solid #1c1f2b"><td style="padding:2px 8px">${reg}</td><td style="padding:2px 8px;color:#6b7280">${name}</td><td style="padding:2px 8px;text-align:right">${val}</td></tr>`;
+        });
+        html += '</table>';
+        const key = (data._fc || 0) + "_" + start;
+        if (!regTable._tables) regTable._tables = {};
+        regTable._tables[key] = html;
+        regTable.innerHTML = Object.values(regTable._tables).join('<hr style="border-color:#2d3148;margin:12px 0">');
+      }
+    }
+
+    function resetStats() {
+      document.getElementById("statBattery").textContent = "--";
+      document.getElementById("batteryGaugeFill").style.strokeDashoffset = 376.99;
+      document.querySelector(".battery-gauge").classList.remove("charging");
+      document.getElementById("statInput").textContent = "--W";
+      document.getElementById("statOutput").textContent = "--W";
+      document.getElementById("statTimeLeft").textContent = "--";
+      document.getElementById("flowPathIn").classList.remove("active");
+      document.getElementById("flowPathOut").classList.remove("active");
+      document.getElementById("flowInput").classList.remove("has-power");
+      document.getElementById("flowOutput").classList.remove("has-power");
+      document.getElementById("cardAc").classList.remove("power-on");
+      document.getElementById("cardDc").classList.remove("power-on");
+      document.getElementById("cardUsb").classList.remove("power-on");
+      document.getElementById("cardLed").classList.remove("power-on");
+      document.getElementById("stateAc").textContent = "OFF";
+      document.getElementById("stateDc").textContent = "OFF";
+      document.getElementById("stateUsb").textContent = "OFF";
+      document.querySelectorAll(".led-btn").forEach(b => b.classList.toggle("active", b.dataset.led === "0"));
+    }
+
+    async function toggleControl(type, register) {
+      const card = document.getElementById("card" + type.charAt(0).toUpperCase() + type.slice(1));
+      const stateEl = document.getElementById("state" + type.charAt(0).toUpperCase() + type.slice(1));
+      const isOn = card.classList.contains("power-on");
+      card.classList.toggle("power-on", !isOn);
+      stateEl.textContent = isOn ? "OFF" : "ON";
+      controlPendingUntil = Date.now() + 3000;
+      card.classList.add("pending");
+      try {
+        const res = await fetch("/api/mqtt/control", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ register, value: isOn ? 0 : 1, deviceId: selectedDevice?.device_id }),
+        });
+        const data = await res.json();
+        if (data.success) addLog("control", `${type.toUpperCase()} → ${isOn ? "OFF" : "ON"}`);
+        else addLog("error", data.error);
+      } catch (err) { addLog("error", err.message); }
+      setTimeout(() => { card.classList.remove("pending"); }, 1500);
+    }
+
+    async function setLedMode(value) {
+      document.querySelectorAll(".led-btn").forEach(b => b.classList.toggle("active", +b.dataset.led === value));
+      controlPendingUntil = Date.now() + 3000;
+      try {
+        const res = await fetch("/api/mqtt/control", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ register: 27, value, deviceId: selectedDevice?.device_id }),
+        });
+        const data = await res.json();
+        if (data.success) addLog("control", `LED → ${["OFF", "ON", "SOS", "FLASH"][value] || value}`);
+        else addLog("error", data.error);
+      } catch (err) { addLog("error", err.message); }
+    }
+
+    async function setSetting(register, value) {
+      settingsPendingUntil = Date.now() + 5000;
+      try {
+        const res = await fetch("/api/mqtt/control", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ register, value, deviceId: selectedDevice?.device_id }),
+        });
+        const data = await res.json();
+        const names = {59:"USB Standby",60:"AC Standby",61:"DC Standby",62:"Screen Rest",68:"Machine Unused"};
+        let display = "Never";
+        if (value > 0) {
+          if (register === 62) display = value >= 60 ? (value / 60) + " min" : value + " sec";
+          else if (register === 60 || register === 61) display = value >= 60 ? (value / 60) + "h" : value + " min";
+          else display = value >= 60 ? (value / 60) + "h" : value + " min";
+        }
+        if (data.success) addLog("settings", `${names[register] || "Reg "+register} → ${display}`);
+        else addLog("error", data.error);
+      } catch (err) { addLog("error", err.message); }
+    }
+
+    function updateSliderPreview(name, value) {
+      document.getElementById(name + "Val").textContent = value + "%";
+    }
+
+    async function setSliderSetting(register, value, name) {
+      settingsPendingUntil = Date.now() + 5000;
+      try {
+        const res = await fetch("/api/mqtt/control", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ register, value, deviceId: selectedDevice?.device_id }),
+        });
+        const data = await res.json();
+        const names = {66:"Discharge Limit",67:"AC Charge Limit"};
+        if (data.success) addLog("settings", `${names[register] || "Reg "+register} → ${value / 10}%`);
+        else addLog("error", data.error);
+      } catch (err) { addLog("error", err.message); }
+    }
+
+    let packedReg84 = 0;
+
+    async function toggleSetting(name, register) {
+      const el = document.getElementById("toggle" + name.charAt(0).toUpperCase() + name.slice(1));
+      const isOn = el.classList.contains("on");
+      el.classList.toggle("on", !isOn);
+      el.classList.add("pending");
+      settingsPendingUntil = Date.now() + 5000;
+      try {
+        const res = await fetch("/api/mqtt/control", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ register, value: isOn ? 0 : 1, deviceId: selectedDevice?.device_id }),
+        });
+        const data = await res.json();
+        if (data.success) addLog("settings", `${name} → ${isOn ? "OFF" : "ON"}`);
+        else addLog("error", data.error);
+      } catch (err) { addLog("error", err.message); }
+      setTimeout(() => { el.classList.remove("pending"); }, 2000);
+    }
+
+    async function togglePackedToggle(name, register, byte) {
+      const el = document.getElementById("toggleLowBatt");
+      const isOn = el.classList.contains("on");
+      el.classList.toggle("on", !isOn);
+      el.classList.add("pending");
+      settingsPendingUntil = Date.now() + 5000;
+      let val;
+      if (register === 84) {
+        const enabled = isOn ? 0 : 1;
+        const threshold = packedReg84 & 0xFF;
+        val = (enabled << 8) | threshold;
+        packedReg84 = val;
+      }
+      try {
+        const res = await fetch("/api/mqtt/control", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ register, value: val, deviceId: selectedDevice?.device_id }),
+        });
+        const data = await res.json();
+        if (data.success) addLog("settings", `${name} → ${isOn ? "OFF" : "ON"}`);
+        else addLog("error", data.error);
+      } catch (err) { addLog("error", err.message); }
+      setTimeout(() => { el.classList.remove("pending"); }, 2000);
+    }
+
+    async function setLowBattThreshold() {
+      const input = document.getElementById("lowBattThreshold");
+      const threshold = Math.min(50, Math.max(5, parseInt(input.value) || 10));
+      input.value = threshold;
+      const enabled = (packedReg84 >> 8) & 1;
+      const val = (enabled << 8) | threshold;
+      packedReg84 = val;
+      settingsPendingUntil = Date.now() + 5000;
+      try {
+        const res = await fetch("/api/mqtt/control", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ register: 84, value: val, deviceId: selectedDevice?.device_id }),
+        });
+        const data = await res.json();
+        if (data.success) addLog("settings", `Low Battery Threshold → ${threshold}%`);
+        else addLog("error", data.error);
+      } catch (err) { addLog("error", err.message); }
+    }
+
+    async function remoteShutdown() {
+      const btn = document.getElementById("btnShutdown");
+      if (!btn.classList.contains("confirming")) {
+        btn.classList.add("confirming");
+        btn.textContent = "⚠️ Confirm Shutdown?";
+        setTimeout(() => {
+          btn.classList.remove("confirming");
+          btn.innerHTML = "⏻ Remote Shutdown";
+        }, 3000);
+        return;
+      }
+      btn.classList.remove("confirming");
+      btn.innerHTML = "⏻ Shutting down...";
+      btn.style.pointerEvents = "none";
+      try {
+        const res = await fetch("/api/mqtt/control", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ register: 64, value: 1, deviceId: selectedDevice?.device_id }),
+        });
+        const data = await res.json();
+        if (data.success) addLog("settings", "Remote Shutdown sent");
+        else addLog("error", data.error);
+      } catch (err) { addLog("error", err.message); }
+      setTimeout(() => {
+        btn.innerHTML = "⏻ Remote Shutdown";
+        btn.style.pointerEvents = "";
+      }, 5000);
+    }
+
+    function addLog(event, msg) {
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement("div");
+      entry.className = "log-entry";
+      entry.innerHTML = `<span class="log-time">${time}</span><span class="log-event">[${event}]</span> ${msg}`;
+      mqttLog.prepend(entry);
+      if (mqttLog.children.length > 100) mqttLog.lastChild.remove();
+    }
+
+    pollBtn.addEventListener("click", async () => {
+      pollBtn.disabled = true;
+      try {
+        await fetch("/api/mqtt/poll", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceId: selectedDevice?.device_id }),
+        });
+        addLog("system", "Poll requested");
+      } catch (err) {
+        addLog("error", err.message);
+      }
+      setTimeout(() => { pollBtn.disabled = false; }, 1000);
+    });
+
+    mqttDisconnectBtn.addEventListener("click", async () => {
+      await fetch("/api/mqtt/disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId: selectedDevice?.device_id }),
+      });
+      if (selectedDevice) connectedDeviceIds.delete(selectedDevice.device_id);
+      if (eventSource) { eventSource.close(); eventSource = null; }
+      selectedDevice = null;
+      mqttSection.classList.remove("active");
+      document.getElementById("noDevicePlaceholder").style.display = "";
+      resetStats();
+      mqttLog.innerHTML = "";
+      renderDevices();
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      if (eventSource) { eventSource.close(); eventSource = null; }
+      bleDisconnect();
+      if (!offlineMode) await fetch("/api/logout", { method: "POST" });
+      offlineMode = false;
+      selectedDevice = null;
+      connectedDeviceIds.clear();
+      loginCard.style.display = "";
+      dashboard.classList.remove("active");
+      mqttSection.classList.remove("active");
+      document.getElementById("noDevicePlaceholder").style.display = "";
+      loginMessage.style.display = "none";
+      document.getElementById("password").value = "";
+    });
+
+    const BLE_SERVICE = "0000a002-0000-1000-8000-00805f9b34fb";
+    const BLE_WRITE_CHAR = "0000c304-0000-1000-8000-00805f9b34fb";
+    const BLE_NOTIFY_CHAR = "0000c305-0000-1000-8000-00805f9b34fb";
+
+    const BLE_INPUT_REGISTER_MAP = {
+      0: "dcChargePower", 2: "acChargePower", 3: "pv1ChargePower",
+      4: "pv2ChargePower", 5: "pv3ChargePower", 6: "pv4ChargePower",
+      7: "acGridPower", 12: "acOutputPower",
+      18: "outputStatusMask", 19: "batteryVoltage",
+      20: "totalOutputPower", 21: "chargingFlag",
+      25: "usbOutputState", 26: "dcOutputState", 27: "acOutputState", 28: "ledState",
+      31: "mainBatteryRaw", 32: "slave1BatteryRaw", 33: "slave2BatteryRaw",
+      34: "slave3BatteryRaw", 35: "slave4BatteryRaw",
+      47: "acVersion", 48: "acVersionSub", 50: "panelVersion",
+      52: "ambientTemp", 56: "batterySOCx10",
+      58: "remainChargeTimeMin",
+      59: "pvChargeEnergyTotalH", 60: "pvChargeEnergyTotalL",
+      61: "pvChargeEnergyToday",
+      71: "remainChargeTime", 72: "remainDischargeTime",
+      77: "smartMeterPower", 78: "totalDcDischargePower",
+    };
+
+    const BLE_HOLDING_REGISTER_MAP = {
+      15: "dcInputType",
+      24: "usbOutputCmd", 25: "dcOutputCmd", 26: "acOutputCmd", 27: "ledCmd",
+      56: "keySound", 57: "silentCharging",
+      59: "usbStandbyTime", 60: "acStandbyTime", 61: "dcStandbyTime",
+      62: "screenRestTime", 64: "remoteShutdown",
+      66: "dischargeLimitx10", 67: "chargeLimitx10",
+      68: "machineUnusedTime",
+      84: "lowBatteryNotification",
+    };
+
+    let bleDevice = null;
+    let bleServer = null;
+    let bleWriteChar = null;
+    let bleNotifyChar = null;
+    let blePollTimer = null;
+    let bleModbusAddr = 17;
+    let bleModbusCount = 80;
+    let bleConnected = false;
+    let bleRxBuffer = [];
+    let bleRxHeader = [];
+    let bleRxExpectedLen = 0;
+    let bleRxCrc = [];
+    let bleResponseResolve = null;
+    let bleLastData = {};
+
+    function bleCrc16(data) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < data.length; i++) {
+        crc ^= data[i];
+        for (let j = 0; j < 8; j++) {
+          if (crc & 1) crc = (crc >> 1) ^ 0xA001;
+          else crc >>= 1;
+        }
+      }
+      return crc;
+    }
+
+    function bleBuildRead(slaveAddr, funcCode, startReg, regCount) {
+      const buf = new Uint8Array(8);
+      buf[0] = slaveAddr;
+      buf[1] = funcCode;
+      buf[2] = (startReg >> 8) & 0xFF;
+      buf[3] = startReg & 0xFF;
+      buf[4] = (regCount >> 8) & 0xFF;
+      buf[5] = regCount & 0xFF;
+      const crc = bleCrc16(buf.slice(0, 6));
+      buf[6] = (crc >> 8) & 0xFF;
+      buf[7] = crc & 0xFF;
+      return buf;
+    }
+
+    function bleBuildWrite(slaveAddr, regAddr, value) {
+      const buf = new Uint8Array(8);
+      buf[0] = slaveAddr;
+      buf[1] = 0x06;
+      buf[2] = (regAddr >> 8) & 0xFF;
+      buf[3] = regAddr & 0xFF;
+      buf[4] = (value >> 8) & 0xFF;
+      buf[5] = value & 0xFF;
+      const crc = bleCrc16(buf.slice(0, 6));
+      buf[6] = (crc >> 8) & 0xFF;
+      buf[7] = crc & 0xFF;
+      return buf;
+    }
+
+    function bleParseResponse(data) {
+      if (data.length < 7) return null;
+      const funcCode = data[1] > 128 ? data[1] - 128 : data[1];
+      if (funcCode !== 3 && funcCode !== 4 && funcCode !== 6) return null;
+
+      if (funcCode === 6) {
+        const crcData = data.slice(0, data.length - 2);
+        const crcRcv = (data[data.length - 2] << 8) | data[data.length - 1];
+        if (crcRcv !== bleCrc16(crcData)) return null;
+        return { funcCode, startReg: (data[2] << 8) | data[3], named: {} };
+      }
+
+      const startReg = (data[2] << 8) | data[3];
+      const regCount = (data[4] << 8) | data[5];
+      const expectedLen = regCount * 2 + 6 + 2;
+      if (data.length < expectedLen) return null;
+
+      const crcData = data.slice(0, data.length - 2);
+      const crcRcv = (data[data.length - 2] << 8) | data[data.length - 1];
+      if (crcRcv !== bleCrc16(crcData)) return null;
+
+      const registers = [];
+      for (let i = 0; i < regCount; i++) {
+        const offset = 6 + i * 2;
+        registers.push((data[offset] << 8) | data[offset + 1]);
+      }
+
+      const regMap = funcCode === 3 ? BLE_HOLDING_REGISTER_MAP : BLE_INPUT_REGISTER_MAP;
+      const named = {};
+      const _registers = {};
+      for (let i = 0; i < regCount; i++) {
+        const regIdx = startReg + i;
+        _registers[regIdx] = registers[i];
+        const name = regMap[regIdx];
+        if (name) named[name] = registers[i];
+      }
+
+      if (funcCode === 4) {
+        if (named.batterySOCx10 !== undefined) named.mainBattery = named.batterySOCx10 / 10;
+        if (named.batteryVoltage !== undefined) named.batteryVoltage = named.batteryVoltage / 10;
+        if (named.ambientTemp !== undefined) named.ambientTemp = named.ambientTemp / 10;
+        if (named.pvChargeEnergyToday !== undefined) named.pvEnergyTodayKwh = +(named.pvChargeEnergyToday * 10 / 1000).toFixed(2);
+        const pv = Math.max(named.pv1ChargePower || 0, named.pv2ChargePower || 0,
+          named.pv3ChargePower || 0, named.pv4ChargePower || 0);
+        const totalIn = (named.dcChargePower || 0) + (named.acChargePower || 0) + pv + (named.acGridPower || 0);
+        named.totalInputPower = totalIn >= 5 ? totalIn : 0;
+      }
+
+      if (funcCode === 3) {
+        if (named.usbOutputCmd !== undefined) named.usbOn = named.usbOutputCmd > 0;
+        if (named.dcOutputCmd !== undefined) named.dcOn = named.dcOutputCmd > 0;
+        if (named.acOutputCmd !== undefined) named.acOn = named.acOutputCmd > 0;
+        if (named.ledCmd !== undefined) named.ledMode = named.ledCmd;
+        if (named.lowBatteryNotification !== undefined) {
+          named.lowBattNotifyEnabled = (named.lowBatteryNotification >> 8) & 1;
+          named.lowBattNotifyThreshold = named.lowBatteryNotification & 0xFF;
+        }
+      }
+
+      named._fc = funcCode;
+      named._registers = _registers;
+      named.raw = { startReg, regCount };
+      return named;
+    }
+
+    function bleResetRxState() {
+      bleRxBuffer = [];
+      bleRxHeader = [];
+      bleRxExpectedLen = 0;
+      bleRxCrc = [];
+    }
+
+    function bleOnNotification(event) {
+      const value = new Uint8Array(event.target.value.buffer);
+      const arr = Array.from(value);
+
+      if (bleRxBuffer.length === 0) {
+        const funcCode = arr[1] > 128 ? arr[1] - 128 : arr[1];
+
+        if (funcCode === 3 || funcCode === 4) {
+          bleRxHeader = arr.slice(0, 6);
+          bleRxBuffer = arr.slice(6);
+          bleRxExpectedLen = 2 * ((arr[4] << 8) | arr[5]) + 2;
+        } else if (funcCode === 5 || funcCode === 6) {
+          const fullPacket = arr;
+          const parsed = bleParseResponse(fullPacket);
+          if (parsed && bleResponseResolve) {
+            bleResponseResolve(parsed);
+            bleResponseResolve = null;
+          }
+          return;
+        } else {
+          return;
+        }
+      } else {
+        bleRxBuffer = bleRxBuffer.concat(arr);
+      }
+
+      if (bleRxBuffer.length >= bleRxExpectedLen) {
+        const fullPacket = bleRxHeader.concat(bleRxBuffer);
+        const parsed = bleParseResponse(fullPacket);
+        bleResetRxState();
+
+        if (parsed) {
+          Object.assign(bleLastData, parsed);
+          if (parsed._fc === 4) {
+            const capacityWh = 2048;
+            const soc = bleLastData.mainBattery;
+            const outputW = bleLastData.totalOutputPower || 0;
+            const anyOn = bleLastData.acOn || bleLastData.dcOn || bleLastData.usbOn;
+            if (soc !== undefined && (outputW > 0 || anyOn)) {
+              const totalDrain = outputW * 1.5 + 22;
+              parsed.remainDischargeHours = Math.round((capacityWh * soc / 100) / totalDrain * 10) / 10;
+              bleLastData.remainDischargeHours = parsed.remainDischargeHours;
+            }
+            const inputW = (bleLastData.dcChargePower || 0) + (bleLastData.acChargePower || 0) +
+              (bleLastData.pv1ChargePower || 0) + (bleLastData.pv2ChargePower || 0);
+            const rcMin = bleLastData.remainChargeTimeMin;
+            if (rcMin && rcMin > 0) {
+              parsed.remainChargeMinutes = rcMin;
+              bleLastData.remainChargeMinutes = rcMin;
+            } else if (soc !== undefined && soc < 100 && inputW > 5) {
+              const fallbackMin = Math.round((capacityWh * (100 - soc) / 100) / (inputW * 0.85) * 60);
+              parsed.remainChargeMinutes = fallbackMin;
+              bleLastData.remainChargeMinutes = fallbackMin;
+            }
+          }
+          if (bleResponseResolve) {
+            bleResponseResolve(parsed);
+            bleResponseResolve = null;
+          }
+          updateStats(parsed);
+          addLog("ble", `FC${parsed._fc || parsed.funcCode} received`);
+        }
+      }
+    }
+
+    function bleSendCommand(data) {
+      if (!bleWriteChar) return Promise.reject(new Error("BLE not connected"));
+
+      bleResetRxState();
+
+      return new Promise((resolve, reject) => {
+        bleResponseResolve = resolve;
+        const timeout = setTimeout(() => {
+          if (bleResponseResolve === resolve) {
+            bleResponseResolve = null;
+            reject(new Error("BLE response timeout"));
+          }
+        }, 5000);
+
+        const origResolve = resolve;
+        bleResponseResolve = (result) => {
+          clearTimeout(timeout);
+          origResolve(result);
+        };
+
+        bleWriteChar.writeValueWithResponse(data.buffer).catch((err) => {
+          clearTimeout(timeout);
+          bleResponseResolve = null;
+          reject(err);
+        });
+      });
+    }
+
+    async function blePollOnce() {
+      if (!bleConnected) return;
+      try {
+        const fc4Cmd = bleBuildRead(bleModbusAddr, 4, 0, bleModbusCount);
+        await bleSendCommand(fc4Cmd);
+        await new Promise(r => setTimeout(r, 300));
+
+        const fc3Cmd = bleBuildRead(bleModbusAddr, 3, 0, Math.max(bleModbusCount, 86));
+        await bleSendCommand(fc3Cmd);
+      } catch (err) {
+        if (bleConnected) addLog("ble-error", err.message);
+      }
+    }
+
+    async function bleConnect() {
+      if (!navigator.bluetooth) {
+        addLog("error", "Web Bluetooth not supported. Use Chrome/Edge on HTTPS or localhost.");
+        return;
+      }
+
+      const btn = document.getElementById("bleConnectBtn");
+      btn.disabled = true;
+      btn.textContent = "🔵 Scanning...";
+
+      try {
+        bleDevice = await navigator.bluetooth.requestDevice({
+          filters: [
+            { namePrefix: "POWER-" },
+            { namePrefix: "Socket-" },
+            { namePrefix: "Meter-" },
+            { namePrefix: "DC_DC-" },
+          ],
+          optionalServices: [BLE_SERVICE],
+        });
+
+        addLog("ble", `Found: ${bleDevice.name || "Unknown"}`);
+
+        bleDevice.addEventListener("gattserverdisconnected", () => {
+          bleConnected = false;
+          clearInterval(blePollTimer);
+          blePollTimer = null;
+          btn.textContent = "🔵 Connect via BLE";
+          btn.classList.remove("connected");
+          btn.disabled = false;
+          document.getElementById("bleDisconnectBtn").style.display = "none";
+          mqttBadge.classList.remove("connected");
+          mqttBadge.innerHTML = '<span class="status-dot offline"></span> Disconnected';
+          addLog("ble", "BLE disconnected");
+        });
+
+        btn.textContent = "🔵 Connecting...";
+        bleServer = await bleDevice.gatt.connect();
+        const service = await bleServer.getPrimaryService(BLE_SERVICE);
+
+        bleWriteChar = await service.getCharacteristic(BLE_WRITE_CHAR);
+        bleNotifyChar = await service.getCharacteristic(BLE_NOTIFY_CHAR);
+
+        await bleNotifyChar.startNotifications();
+        bleNotifyChar.addEventListener("characteristicvaluechanged", bleOnNotification);
+
+        bleConnected = true;
+
+        if (selectedDevice) {
+          bleModbusAddr = selectedDevice.productInfo?.modbus_address || 17;
+          bleModbusCount = selectedDevice.productInfo?.modbus_count || 80;
+        }
+
+        btn.textContent = "🟢 BLE Connected";
+        btn.classList.add("connected");
+        btn.disabled = true;
+        document.getElementById("bleDisconnectBtn").style.display = "";
+
+        document.getElementById("noDevicePlaceholder").style.display = "none";
+        mqttSection.classList.add("active");
+
+        mqttBadge.classList.add("connected");
+        mqttBadge.innerHTML = '<span class="status-dot online"></span> BLE Connected';
+
+        addLog("ble", `Connected to ${bleDevice.name}`);
+
+        await blePollOnce();
+        blePollTimer = setInterval(blePollOnce, 5000);
+
+      } catch (err) {
+        addLog("error", "BLE: " + err.message);
+        btn.textContent = "🔵 Connect via BLE";
+        btn.disabled = false;
+      }
+    }
+
+    function bleDisconnect() {
+      bleConnected = false;
+      if (blePollTimer) { clearInterval(blePollTimer); blePollTimer = null; }
+      if (bleDevice && bleDevice.gatt.connected) {
+        bleDevice.gatt.disconnect();
+      }
+      bleDevice = null;
+      bleServer = null;
+      bleWriteChar = null;
+      bleNotifyChar = null;
+      bleResetRxState();
+      bleLastData = {};
+      const btn = document.getElementById("bleConnectBtn");
+      btn.textContent = "🔵 Connect via BLE";
+      btn.classList.remove("connected");
+      btn.disabled = false;
+      document.getElementById("bleDisconnectBtn").style.display = "none";
+    }
+
+    window.addEventListener("beforeunload", () => {
+      if (bleDevice && bleDevice.gatt.connected) {
+        bleDevice.gatt.disconnect();
+      }
+    });
+
+    const origToggleControl = toggleControl;
+    toggleControl = async function(type, register) {
+      if (bleConnected) {
+        const card = document.getElementById("card" + type.charAt(0).toUpperCase() + type.slice(1));
+        const stateEl = document.getElementById("state" + type.charAt(0).toUpperCase() + type.slice(1));
+        const isOn = card.classList.contains("power-on");
+        card.classList.toggle("power-on", !isOn);
+        stateEl.textContent = isOn ? "OFF" : "ON";
+        controlPendingUntil = Date.now() + 3000;
+        card.classList.add("pending");
+        try {
+          const cmd = bleBuildWrite(bleModbusAddr, register, isOn ? 0 : 1);
+          await bleSendCommand(cmd);
+          addLog("ble-control", `${type.toUpperCase()} → ${isOn ? "OFF" : "ON"}`);
+        } catch (err) { addLog("error", err.message); }
+        setTimeout(() => card.classList.remove("pending"), 1500);
+      } else {
+        return origToggleControl(type, register);
+      }
+    };
+
+    const origSetLedMode = setLedMode;
+    setLedMode = async function(value) {
+      if (bleConnected) {
+        document.querySelectorAll(".led-btn").forEach(b => b.classList.toggle("active", +b.dataset.led === value));
+        controlPendingUntil = Date.now() + 3000;
+        try {
+          const cmd = bleBuildWrite(bleModbusAddr, 27, value);
+          await bleSendCommand(cmd);
+          addLog("ble-control", `LED → ${["OFF", "ON", "SOS", "FLASH"][value] || value}`);
+        } catch (err) { addLog("error", err.message); }
+      } else {
+        return origSetLedMode(value);
+      }
+    };
+
+    const origSetSetting = setSetting;
+    setSetting = async function(register, value) {
+      if (bleConnected) {
+        settingsPendingUntil = Date.now() + 5000;
+        try {
+          const cmd = bleBuildWrite(bleModbusAddr, register, value);
+          await bleSendCommand(cmd);
+          addLog("ble-control", `Register ${register} → ${value}`);
+        } catch (err) { addLog("error", err.message); }
+      } else {
+        return origSetSetting(register, value);
+      }
+    };
+
+    const origSetSliderSetting = setSliderSetting;
+    setSliderSetting = async function(register, value, name) {
+      if (bleConnected) {
+        settingsPendingUntil = Date.now() + 5000;
+        try {
+          const cmd = bleBuildWrite(bleModbusAddr, register, value);
+          await bleSendCommand(cmd);
+          addLog("ble-control", `${name} → ${value}`);
+        } catch (err) { addLog("error", err.message); }
+      } else {
+        return origSetSliderSetting(register, value, name);
+      }
+    };
+
+    const origToggleSetting = toggleSetting;
+    toggleSetting = async function(name, register) {
+      if (bleConnected) {
+        const el = document.getElementById("toggle" + name.charAt(0).toUpperCase() + name.slice(1));
+        const isOn = el.classList.contains("on");
+        el.classList.toggle("on", !isOn);
+        settingsPendingUntil = Date.now() + 5000;
+        try {
+          const cmd = bleBuildWrite(bleModbusAddr, register, isOn ? 0 : 1);
+          await bleSendCommand(cmd);
+          addLog("ble-control", `${name} → ${isOn ? "OFF" : "ON"}`);
+        } catch (err) { addLog("error", err.message); }
+      } else {
+        return origToggleSetting(name, register);
+      }
+    };
+
+    const origTogglePackedToggle = togglePackedToggle;
+    togglePackedToggle = async function(name, register, byte) {
+      if (bleConnected) {
+        const el = document.getElementById("toggleLowBatt");
+        const isOn = el.classList.contains("on");
+        el.classList.toggle("on", !isOn);
+        settingsPendingUntil = Date.now() + 5000;
+        try {
+          const threshold = parseInt(document.getElementById("lowBattThreshold").value) || 10;
+          const value = ((isOn ? 0 : 1) << 8) | threshold;
+          const cmd = bleBuildWrite(bleModbusAddr, register, value);
+          await bleSendCommand(cmd);
+          addLog("ble-control", `lowBattNotify → ${isOn ? "OFF" : "ON"}`);
+        } catch (err) { addLog("error", err.message); }
+      } else {
+        return origTogglePackedToggle(name, register, byte);
+      }
+    };
+
+    const origSetLowBattThreshold = setLowBattThreshold;
+    setLowBattThreshold = async function() {
+      if (bleConnected) {
+        const threshold = parseInt(document.getElementById("lowBattThreshold").value) || 10;
+        const el = document.getElementById("toggleLowBatt");
+        const enabled = el.classList.contains("on") ? 1 : 0;
+        const value = (enabled << 8) | threshold;
+        settingsPendingUntil = Date.now() + 5000;
+        try {
+          const cmd = bleBuildWrite(bleModbusAddr, 84, value);
+          await bleSendCommand(cmd);
+          addLog("ble-control", `lowBattThreshold → ${threshold}%`);
+        } catch (err) { addLog("error", err.message); }
+      } else {
+        return origSetLowBattThreshold();
+      }
+    };
+
+    const origRemoteShutdown = remoteShutdown;
+    remoteShutdown = async function() {
+      if (bleConnected) {
+        if (!confirm("Are you sure you want to shut down the device?")) return;
+        try {
+          const cmd = bleBuildWrite(bleModbusAddr, 64, 1);
+          await bleSendCommand(cmd);
+          addLog("ble-control", "Remote shutdown sent");
+        } catch (err) { addLog("error", err.message); }
+      } else {
+        return origRemoteShutdown();
+      }
+    };
+
+    pollBtn.addEventListener("click", async () => {
+      if (bleConnected) {
+        pollBtn.disabled = true;
+        await blePollOnce();
+        addLog("ble", "Manual poll complete");
+        setTimeout(() => { pollBtn.disabled = false; }, 1000);
+        return;
+      }
+    }, true);
+  </script>
+</body>
+</html>

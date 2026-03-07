@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Fossibot Account",
+        "description": "Enter your BSApp / BrightEMS credentials",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid username or password",
+      "cannot_connect": "Unable to connect to BSApp servers"
+    },
+    "abort": {
+      "already_configured": "This account is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Fossibot Options",
+        "data": {
+          "connection_type": "Connection type",
+          "ble_address": "BLE device address (for Bluetooth mode)",
+          "poll_interval": "Poll interval (seconds)",
+          "enable_energy_sensors": "Enable energy tracking sensors",
+          "enable_advanced_controls": "Enable advanced controls (standby timers, key sound, etc.)"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+# Credentials & secrets
+.credentials.json
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.history/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temp
+/tmp/
+
+# Dev scripts
+brute-secret.js
+
+# APK files
+*.apk
